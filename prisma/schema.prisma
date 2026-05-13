@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  slug          String        @unique
+  icon          String        @default("📦")
+  description   String?
+  order         Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  products      Product[]
+  subCategories SubCategory[]
+}
+
+model SubCategory {
+  id         String    @id @default(cuid())
+  name       String
+  slug       String
+  icon       String    @default("▸")
+  order      Int       @default(0)
+  categoryId String
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products   Product[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([categoryId, slug])
+}
+
+model Product {
+  id                String       @id @default(cuid())
+  name              String
+  description       String
+  symbol            String       @default("📦")
+  categoryId        String
+  category          Category     @relation(fields: [categoryId], references: [id])
+  subCategoryId     String?
+  subCategory       SubCategory? @relation(fields: [subCategoryId], references: [id])
+  amountIn          Int          @default(0)
+  sellingPrice      Float
+  potentialEarnings Float?
+  status            String       @default("in_stock")
+  rarity            String       @default("common")
+  cardBg            String       @default("#0a1628")
+  cardAccent        String       @default("#00e5ff")
+  featured          Boolean      @default(false)
+  featuredOrder     Int?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  orders            Order[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  email     String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  amount    Float
+  currency  String   @default("USD")
+  txHash    String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model PageVisit {
+  id        String   @id @default(cuid())
+  path      String   @default("/")
+  country   String?
+  language  String?
+  userAgent String?
+  referrer  String?
+  ipHash    String?
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  category   String
+  subject    String
+  message    String
+  status     String   @default("open")
+  priority   String   @default("normal")
+  adminNotes String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
